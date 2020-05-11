@@ -651,6 +651,17 @@ class DiskStorageBroker(BaseStorageBroker):
             if not os.path.isdir(abspath):
                 os.mkdir(abspath)
 
+    def get_item(self, identifier, fpath):
+        """Get item content by identifier and write to local file.
+
+        :param identifier:
+        :param fpath: file path.
+        :returns: file_path.
+        """
+        src_abspath = self.get_item_abspath(identifier)
+        shutil.copyfile(src_abspath, fpath)
+        return fpath
+
     def put_item(self, fpath, relpath):
         """Put item with content from fpath at relpath in dataset.
 

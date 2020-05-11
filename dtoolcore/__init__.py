@@ -255,9 +255,14 @@ def _copy_content(src_dataset, dest_proto_dataset, progressbar=None):
                     progressbar.update(1)
                 continue
 
-        src_abspath = src_dataset.item_content_abspath(identifier)
         relpath = src_properties["relpath"]
-        dest_proto_dataset.put_item(src_abspath, relpath)
+
+        # might want to do this in a more elgant way
+        tmp_file = tempfile.NamedTemporaryFile(delete=False)
+        src_dataset.get_item(identifier, tmp_file.name)
+        dest_proto_dataset.put_item(tmp_file.name, relpath)
+        os.unlink(tmp_file.name)
+
         if progressbar:
             progressbar.item_show_func = lambda x: relpath
             progressbar.update(1)
@@ -442,6 +447,17 @@ class _BaseDataSet(object):
             )
 
         self._storage_broker.put_overlay(overlay_name, overlay)
+
+    def get_item(self, identifier, fpath):
+        """
+        Get item from dataset.
+
+        :param identifier: item identifier
+        :param fpath: path to the item on disk
+        :returns: absolute path to the item on disk
+        """
+        logger.debug("Get item with identifier {} {}".format(identifier, self))
+        return self._storage_broker.get_item(identifier, fpath)
 
     def generate_manifest(self, progressbar=None):
         """Return manifest generated from knowledge about contents."""
